@@ -188,7 +188,8 @@ namespace UserInterface.Presenters
                 markdown.AppendLine(string.Join("", tablesWithoutSolutes.Select(i => i.ToMarkdown())));
                 // Now arrange solutes into a nice markdown table.
                 StringBuilder soluteMarkdownTable = new StringBuilder();
-                soluteMarkdownTable.AppendLine("### Solutes");
+                if (soluteTables.Count > 0)
+                    soluteMarkdownTable.AppendLine("### Solutes");
                 soluteMarkdownTable.AppendLine();
                 soluteMarkdownTable.Append("|");
 
@@ -259,7 +260,11 @@ namespace UserInterface.Presenters
                 // Print the values line-by-line for each condition.
                 soluteMarkdownTable.AppendLine();
                 // Gets the list length of one of the InitialCondition value lists.
-                int valueCount = tempValueLists[0].Count;
+                int valueCount = 0;
+                if (tempValueLists.Count > 0)
+                {
+                    valueCount = tempValueLists[0].Count;
+                }
                 // Create a markdown table row for each value in the list.
                 for (int i = 0; i < valueCount; i++)
                 {
@@ -289,19 +294,31 @@ namespace UserInterface.Presenters
                 messages[simulationName] = summaryModel.GetMessages(simulationName).ToArray();
 
             IEnumerable<Message> filteredMessages = GetFilteredMessages(simulationName);
-            var groupedMessages = filteredMessages.GroupBy(m => new { m.Date, m.RelativePath });
+            var groupedMessages = filteredMessages.GroupBy(m => new { m.Date });
             if (filteredMessages.Any())
             {
                 markdown.AppendLine($"## Simulation log");
                 markdown.AppendLine();
                 markdown.AppendLine(string.Join("", groupedMessages.Select(m =>
                 {
+                    string previousPath = null;
                     StringBuilder md = new StringBuilder();
-                    md.AppendLine($"### {m.Key.Date:yyyy-MM-dd} {m.Key.RelativePath}");
+                    md.AppendLine($"### {m.Key.Date:yyyy-MM-dd}");
                     md.AppendLine();
                     md.AppendLine("```");
-                    foreach (Message msg in m)
-                        md.AppendLine(msg.Text);
+
+                    int spacing = m.Max(msg => msg.RelativePath.Length) + 2;
+                    foreach (var msg in m)
+                    {
+                        if (previousPath == null || msg.RelativePath != previousPath)
+                        {
+                            md.Append($"{msg.RelativePath}:".PadRight(spacing));
+                            previousPath = msg.RelativePath;
+                        }
+                        else
+                            md.Append(' ', spacing);
+                        md.AppendLine($"{msg.Text}");
+                    }
                     md.AppendLine("```");
                     md.AppendLine();
                     return md.ToString();
