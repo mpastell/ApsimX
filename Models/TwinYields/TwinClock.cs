@@ -14,7 +14,7 @@ namespace Models
 {
 
     /// <summary>
-    /// The clock model is resonsible for controlling the daily timestep in APSIM. It 
+    /// The clock model is resonsible for controlling the daily timestep in APSIM. It
     /// keeps track of the simulation date and loops from the start date to the end
     /// date, publishing events that other models can subscribe to.
     /// </summary>
@@ -129,8 +129,8 @@ namespace Models
         public event EventHandler DoWeather;
         /// <summary>Occurs when [do daily initialisation].</summary>
         public event EventHandler DoDailyInitialisation;
-        /// <summary>Occurs when [do initial summary].</summary>
-        public event EventHandler DoInitialSummary;
+        // /// <summary>Occurs when [do initial summary].</summary>
+        // public event EventHandler DoInitialSummary;
         /// <summary>Occurs when [do management].</summary>
         public event EventHandler DoManagement;
         /// <summary>Occurs when [do PestDisease damage]</summary>
@@ -148,16 +148,16 @@ namespace Models
         public event EventHandler DoSoilOrganicMatter;                                 //SurfaceOM
         /// <summary>Occurs when [do surface organic matter decomposition].</summary>
         public event EventHandler DoSurfaceOrganicMatterDecomposition;                 //SurfaceOM
-        /// <summary>Occurs when [do update transpiration].</summary>                   
+        /// <summary>Occurs when [do update transpiration].</summary>
         public event EventHandler DoUpdateWaterDemand;
         /// <summary>Occurs when [do water arbitration].</summary>
         public event EventHandler DoWaterArbitration;                                  //Arbitrator
         /// <summary>Occurs between DoWaterArbitration and DoPhenology. Performs sorghum final leaf no calcs.</summary>
         public event EventHandler PrePhenology;
-        /// <summary>Occurs when [do phenology].</summary>                             
-        public event EventHandler DoPhenology;                                         // Plant 
+        /// <summary>Occurs when [do phenology].</summary>
+        public event EventHandler DoPhenology;                                         // Plant
         /// <summary>Occurs when [do potential plant growth].</summary>
-        public event EventHandler DoPotentialPlantGrowth;                              //Refactor to DoWaterLimitedGrowth  Plant        
+        public event EventHandler DoPotentialPlantGrowth;                              //Refactor to DoWaterLimitedGrowth  Plant
         /// <summary>Occurs when [do potential plant partioning].</summary>
         public event EventHandler DoPotentialPlantPartioning;                          // PMF OrganArbitrator.
         /// <summary>Occurs when [do nutrient arbitration].</summary>
@@ -174,12 +174,12 @@ namespace Models
         public event EventHandler DoStock;
         /// <summary> Process a Pest and Disease lifecycle object </summary>
         public event EventHandler DoLifecycle;
-        /// <summary>Occurs when [do management calculations].</summary>
-        public event EventHandler DoManagementCalculations;
-        /// <summary>Occurs when [do report calculations].</summary>
-        public event EventHandler DoReportCalculations;
-        /// <summary>Occurs when [do report].</summary>
-        public event EventHandler DoReport;
+        // /// <summary>Occurs when [do management calculations].</summary>
+        //public event EventHandler DoManagementCalculations;
+        // /// <summary>Occurs when [do report calculations].</summary>
+        //public event EventHandler DoReportCalculations;
+        // /// <summary>Occurs when [do report].</summary>
+        //public event EventHandler DoReport;
 
         /// <summary>
         /// Occurs when dcaps performs its calculations. This needs to happen
@@ -319,8 +319,8 @@ namespace Models
         {
             Today = StartDate;
 
-            if (DoInitialSummary != null)
-                DoInitialSummary.Invoke(this, args);
+            //if (DoInitialSummary != null)
+            //    DoInitialSummary.Invoke(this, args);
 
             if (StartOfSimulation != null)
                 StartOfSimulation.Invoke(this, args);
@@ -425,11 +425,11 @@ namespace Models
             if (DoUpdate != null)
                 DoUpdate.Invoke(this, args);
 
-            if (DoManagementCalculations != null)
-                DoManagementCalculations.Invoke(this, args);
+            //if (DoManagementCalculations != null)
+            //    DoManagementCalculations.Invoke(this, args);
 
-            if (DoReportCalculations != null)
-                DoReportCalculations.Invoke(this, args);
+            //if (DoReportCalculations != null)
+            //    DoReportCalculations.Invoke(this, args);
 
             if (Today.DayOfWeek == DayOfWeek.Saturday && EndOfWeek != null)
                 EndOfWeek.Invoke(this, args);
@@ -496,21 +496,22 @@ namespace Models
             if (EndOfDay != null)
                 EndOfDay.Invoke(this, args);
 
-            if (DoReport != null)
-                DoReport.Invoke(this, args);
+            //if (DoReport != null)
+            //    DoReport.Invoke(this, args);
 
             Today = Today.AddDays(1);
             //}
         }
 
-        /// <summary>Finish simulation</summary>       
+        /// <summary>Finish simulation</summary>
         public void Done()
         {
             Today = EndDate;
 
             if (EndOfSimulation != null)
                 EndOfSimulation.Invoke(this, args);
-            Completed.Invoke(this, args);
+
+            Completed?.Invoke(this, new EventArgs());
 
             Summary?.WriteMessage(this, "Simulation terminated normally", MessageType.Information);
             //Completed?.Invoke(this, new EventArgs());

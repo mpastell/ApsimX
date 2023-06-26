@@ -83,6 +83,7 @@ namespace Models.TwinYields
         {
             Clocks.ForEach(c => c.Done());
             Simulations.ForEach(sim => sim.Cleanup());
+            cts.Cancel();
         }
     }
 }
