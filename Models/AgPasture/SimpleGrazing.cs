@@ -1,17 +1,19 @@
-using APSIM.Shared.Utilities;
-using Models.Core;
-using Models.ForageDigestibility;
-using Models.Functions;
+using System;
+using System.Linq;
+using System.Collections.Generic;
 using Models.PMF;
-using Models.PMF.Interfaces;
+using Models.Core;
 using Models.Soils;
 using Models.Surface;
+using Models.Functions;
+using Models.PMF.Interfaces;
+using Models.ForageDigestibility;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using APSIM.Shared.Utilities;
+
 namespace Models.AgPasture
 {
+
     /// <summary>
     /// A model for cutting pasture / plants and calculating and returning excreta to the
     /// soil based on the biomass cut. If this model is put at the top level of the simulation
@@ -417,6 +419,7 @@ namespace Models.AgPasture
         {
             DaysSinceGraze += 1;
             ProportionOfTotalDM = new double[zones.First().NumForages];
+            PostGrazeDM = 0;
 
             foreach (var zone in zones)
                 zone.OnStartOfDay();
@@ -426,6 +429,9 @@ namespace Models.AgPasture
         [EventSubscribe("DoManagement")]
         private void OnDoManagement(object sender, EventArgs e)
         {
+            PreGrazeDM = zones.Sum(z => z.TotalDM);
+            PreGrazeHarvestableDM = zones.Sum(z => z.HarvestableDM);
+
             foreach (var zone in zones)
                 zone.DoManagement();
 

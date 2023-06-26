@@ -513,7 +513,26 @@ namespace UserInterface.Presenters
                     });
                 var water = soil.FindChild<Water>();
                 if (water != null && water.Thickness == null)
+                {
                     water.Thickness = physical.Thickness;
+                    water.InitialValues = physical.DUL;
+                }
+                var euc = physical.FindChild<SoilCrop>("EucalyptusSoil");
+                var pinus = physical.FindChild<SoilCrop>("PinusSoil");
+                if (euc != null && pinus == null)
+                {
+                    pinus = euc.Clone();
+                    pinus.Name = "PinusSoil";
+                    physical.Children.Add(pinus);
+                }
+                var scrum = physical.FindChild<SoilCrop>("SCRUMSoil");
+                var firstSoilCrop = physical.FindChild<SoilCrop>();
+                if (scrum == null && firstSoilCrop != null)
+                {
+                    scrum = firstSoilCrop.Clone();
+                    scrum.Name = "SCRUMSoil";
+                    physical.Children.Add(scrum);
+                }
             }
             soil.OnCreated();
         }

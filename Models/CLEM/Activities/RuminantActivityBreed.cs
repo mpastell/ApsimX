@@ -1,12 +1,9 @@
 using Models.Core;
-using Models.CLEM.Groupings;
 using Models.CLEM.Resources;
-using StdUnits;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using Models.Core.Attributes;
 using System.Globalization;
 using System.IO;
@@ -346,9 +343,8 @@ namespace Models.CLEM.Activities
                         newSucklingRuminant.SaleFlag = HerdChangeReason.Born;
 
                         // add attributes inherited from mother
-                        foreach (var attribute in female.Attributes.Items)
-                            if (attribute.Value != null)
-                                newSucklingRuminant.Attributes.Add(attribute.Key, attribute.Value.GetInheritedAttribute() as IIndividualAttribute);
+                        foreach (var attribute in female.Attributes.Items.Where(a => a.Value is not null))
+                            newSucklingRuminant.AddInheritedAttribute(attribute); // .Attributes.Add(attribute.Key, attribute.Value.GetInheritedAttribute() as IIndividualAttribute);
 
                         HerdResource.AddRuminant(newSucklingRuminant, this);
 
