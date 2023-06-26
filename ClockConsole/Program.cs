@@ -56,7 +56,8 @@ namespace ClockConsole
             // Run is not called as the simulation is run step by step
             // -> New method is required to invoke events
             //sim.Commence();
-            clock.Commence();
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            clock.Commence(cancellationTokenSource);
 
             while (clock.Today <= clock.EndDate)
             {
@@ -69,6 +70,6 @@ namespace ClockConsole
             storage.Close();
             Console.WriteLine("Done");
         }
-   
+
     }
 }
