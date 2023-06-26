@@ -257,7 +257,8 @@ namespace Models
         /// <summary>Start the simulation</summary>
         public void Commence(CancellationTokenSource cancelToken)
         {
-            Commencing?.Invoke(this, new EventArgs());
+            args = new EventArgs();
+            Commencing?.Invoke(this, args);
             // Begin running the simulation.
             DoCommence?.Invoke(this, new CommenceArgs() { CancelToken = cancelToken });
         }

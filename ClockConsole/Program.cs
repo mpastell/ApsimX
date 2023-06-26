@@ -22,8 +22,12 @@ namespace ClockConsole
             //string simFile = "TwinClock_test.apsimx";
             //string simFile = "AGPRyeGrassDates.apsimx";
             //string simFile = "WheatIClock.apsimx";
-            string simFile = "TwinClockWheat.apsimx";
+            string simFile = "WheatProtoTwinClock.apsimx";
             IModel sims = FileFormat.ReadFromFile<Simulations>(simFile, e => throw e, false).NewModel;
+
+            var weather = sims.FindDescendant<Weather>();
+            weather.FileName = "Jokioinen.met";
+
             //var ops = sim.FindDescendant<Models.Operations>();
             //var op = ops.Operation.First();
             // High level Run -> Run.Runner()
@@ -37,10 +41,25 @@ namespace ClockConsole
             //jobRunner.Add(job);
             //jobRunner.Run(true);
 
+            SimulationEnsemble sn = new SimulationEnsemble(sims, 10);
+            sn.Prepare();
+            sn.Commence();
+            var wht = sn.Simulations[0].FindDescendant<Plant>();
+
+            while (sn.Today <= sn.EndDate)
+            {
+                sn.Step();
+                Console.WriteLine(sn.Today.Date.ToShortDateString() + "," +
+                    wht.LAI.ToString()
+                    );
+            }
+            sn.Done();
+
+            //
             ModelEnsemble en = new ModelEnsemble(sims, 10); ;
             en.Prepare();
             en.Commence();
-            var wht = en.Models[0].FindDescendant<Plant>();
+            wht = en.Models[0].FindDescendant<Plant>();
 
             while (en.Today <= en.EndDate)
             {
@@ -58,7 +77,7 @@ namespace ClockConsole
 
             // Try to run step by step
             var sim = sims.FindChild<Models.Core.Simulation>();
-            var weather = sim.FindChild<Weather>();
+            weather = sim.FindChild<Weather>();
 
             var clock = (Models.TwinClock)sim.FindChild<IClock>();
             var wt = sim.FindByPath("[Wheat].Grain.Total.Wt");
@@ -92,6 +111,6 @@ namespace ClockConsole
             //storage.Close();
             Console.WriteLine("Done");
         }
-   
+
     }
 }

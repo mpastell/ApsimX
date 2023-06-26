@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Models.Core;
 using Models.Storage;
+using Models.Core.ApsimFile;
 
 namespace Models.TwinYields
 {
     /// <summary>Ensemble of models</summary>
-    public class ModelEnsemble
+    public class SimulationEnsemble
     {
         /// <summary>List of models</summary>
-        public List<Model> Models { get; set; }
+        public Model Model { get; set; }
         /// <summary>All clocks</summary>
         public List<TwinClock> Clocks { get; }
         /// <summary>List of simulations</summary>
@@ -32,32 +34,38 @@ namespace Models.TwinYields
         private CancellationTokenSource cts;
 
         /// <summary>Initialize the model ensemble</summary>
-        public ModelEnsemble(IModel imodel, Int64 N)
+        public SimulationEnsemble(IModel imodel, Int64 N)
         {
-            Model model = (Model)imodel;
-            var storage = model.FindChild<DataStore>();
+            Model = (Model)imodel;
+            var storage = Model.FindChild<DataStore>();
             storage.Enabled = false;
-            var reports = model.FindAllDescendants<Report>();
+            var reports = Model.FindAllDescendants<Report>();
 
             foreach (var report in reports)
             {
-                model.Children.Remove(report);
+                Model.Children.Remove(report);
             }
 
-            Models = new List<Model>();
             Simulations = new List<Simulation>();
             Clocks = new List<TwinClock>();
 
+            var orig_sim = Model.FindDescendant<Simulation>();
+
             for (int i = 0; i < N; i++)
             {
-                var cmodel = model.Clone();
-                var sim = cmodel.FindDescendant<Simulation>();
+                orig_sim.Name = $"sim{i}";
+                var sim = orig_sim.Clone();
                 var clock = sim.FindDescendant<TwinClock>();
-                //sim.FileName = null;
-                Models.Add(cmodel);
-                Simulations.Add(sim);
-                Clocks.Add(clock);
+                Model.Children.Add(sim);
             }
+            Model.Children.Remove(orig_sim);
+            var json = FileFormat.WriteToString(Model);
+            var outfile ="CSEnsemble.apsimx";
+            File.WriteAllText(outfile, json);
+            IModel sims = FileFormat.ReadFromFile<Simulations>(outfile, e => throw e, false).NewModel;
+            Model = (Model)sims;
+            Simulations = Model.FindAllDescendants<Simulation>().ToList();
+            Clocks = Model.FindAllDescendants<TwinClock>().ToList();
         }
 
         /// <summary>Prepare simulations</summary>
