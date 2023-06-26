@@ -9,6 +9,8 @@ using Models.Storage;
 using Models.PMF;
 using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.VisualBasic;
+using Models.TwinYields;
 
 namespace ClockConsole
 {
@@ -17,14 +19,13 @@ namespace ClockConsole
         static void Main(string[] args)
         {
             //string simFile = "pytest_py.apsimx";
-            string simFile = "TwinClock_test.apsimx";
+            //string simFile = "TwinClock_test.apsimx";
+            //string simFile = "AGPRyeGrassDates.apsimx";
             //string simFile = "WheatIClock.apsimx";
+            string simFile = "TwinClockWheat.apsimx";
             IModel sims = FileFormat.ReadFromFile<Simulations>(simFile, e => throw e, false).NewModel;
-            var sim = sims.FindChild<Models.Core.Simulation>();
-            var weather = sim.FindChild<Weather>();
-            //weather.FileName = "Dalby.met";
-            weather.FileName = "Jokioinen.met";
-
+            //var ops = sim.FindDescendant<Models.Operations>();
+            //var op = ops.Operation.First();
             // High level Run -> Run.Runner()
             //var Runner = new Models.Core.Run.Runner(sim);
             //var e = Runner.Run();
@@ -36,18 +37,39 @@ namespace ClockConsole
             //jobRunner.Add(job);
             //jobRunner.Run(true);
 
+            ModelEnsemble en = new ModelEnsemble(sims, 10); ;
+            en.Prepare();
+            en.Commence();
+            var wht = en.Models[0].FindDescendant<Plant>();
+
+            while (en.Today <= en.EndDate)
+            {
+                en.Step();
+                Console.WriteLine(en.Today.Date.ToShortDateString() + "," +
+                    wht.LAI.ToString()
+                    );
+            }
+            en.Done();
+
             // JobRunner.cs calls simulations methods, Line 188 RunActualJob
             //sim.Prepare();
             //sim.Run();
             //sim.Cleanup();
 
             // Try to run step by step
+            var sim = sims.FindChild<Models.Core.Simulation>();
+            var weather = sim.FindChild<Weather>();
+
             var clock = (Models.TwinClock)sim.FindChild<IClock>();
             var wt = sim.FindByPath("[Wheat].Grain.Total.Wt");
             var wheat = sim.FindDescendant<Plant>();
-            var leaf = wheat.FindChild<Models.PMF.Organs.Leaf>();
+             var leaf = wheat.FindChild<Models.PMF.Organs.Leaf>();
 
             var storage = sims.FindChild<DataStore>();
+            storage.Enabled = false;
+            sims.Children.Remove(sims.FindChild<Report>());
+
+
             storage.Dispose();
             File.Delete(storage.FileName);
             storage.Open();
@@ -56,7 +78,8 @@ namespace ClockConsole
             // Run is not called as the simulation is run step by step
             // -> New method is required to invoke events
             //sim.Commence();
-            clock.Commence();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            clock.Commence(cts);
 
             while (clock.Today <= clock.EndDate)
             {
@@ -66,7 +89,7 @@ namespace ClockConsole
             }
             clock.Done();
             sim.Cleanup();
-            storage.Close();
+            //storage.Close();
             Console.WriteLine("Done");
         }
    

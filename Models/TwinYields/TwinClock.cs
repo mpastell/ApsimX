@@ -255,11 +255,10 @@ namespace Models
         public event EventHandler Completed;
 
         /// <summary>Start the simulation</summary>
-        public void Commence()
+        public void Commence(CancellationTokenSource cancelToken)
         {
             Commencing?.Invoke(this, new EventArgs());
             // Begin running the simulation.
-            var cancelToken = new CancellationTokenSource();
             DoCommence?.Invoke(this, new CommenceArgs() { CancelToken = cancelToken });
         }
 
@@ -511,9 +510,10 @@ namespace Models
 
             if (EndOfSimulation != null)
                 EndOfSimulation.Invoke(this, args);
+            Completed.Invoke(this, args);
 
             Summary?.WriteMessage(this, "Simulation terminated normally", MessageType.Information);
-            Completed?.Invoke(this, new EventArgs());
+            //Completed?.Invoke(this, new EventArgs());
         }
     }
 }
