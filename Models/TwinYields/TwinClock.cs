@@ -27,9 +27,9 @@ namespace Models
         /// <summary>The arguments</summary>
         private EventArgs args = new EventArgs();
 
-        /// <summary>The summary</summary>
-        [Link]
-        private ISummary Summary = null;
+        // /// <summary>The summary</summary>
+        //[Link]
+        //private ISummary Summary = null;
 
         /// <summary>The start date of the simulation.</summary>
         [Summary]
@@ -514,7 +514,7 @@ namespace Models
 
             Completed?.Invoke(this, new EventArgs());
 
-            Summary?.WriteMessage(this, "Simulation terminated normally", MessageType.Information);
+            //Summary?.WriteMessage(this, "Simulation terminated normally", MessageType.Information);
             //Completed?.Invoke(this, new EventArgs());
         }
     }

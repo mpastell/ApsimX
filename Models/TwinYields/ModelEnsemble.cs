@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using Models.Climate;
 using Models.Core;
 using Models.PMF.Organs;
@@ -13,6 +14,7 @@ using Models.Storage;
 using Models.Soils.NutrientPatching;
 using Models.PMF;
 using Models.Utilities;
+using Models.CLEM.Activities;
 
 namespace Models.TwinYields
 {
@@ -103,7 +105,8 @@ namespace Models.TwinYields
                 var managers = model.FindAllDescendants<Manager>();
                 foreach (var manager in managers)
                 {
-                    manager.Code = manager.Code.Replace("Clock", "IClock");
+                    //manager.Code = manager.Code.Replace("Clock", "IClock");
+                    manager.Code = Regex.Replace(manager.Code, "[^I]Clock", " IClock");
                 }
             }
         }

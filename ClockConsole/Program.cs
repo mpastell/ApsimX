@@ -10,6 +10,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.VisualBasic;
 using Models.TwinYields;
 using System;
+using Models.AgPasture;
+
 
 namespace ClockConsole
 {
@@ -22,11 +24,13 @@ namespace ClockConsole
             //string simFile = "AGPRyeGrassDates.apsimx";
             //string simFile = "WheatIClock.apsimx";
             //string simFile = "WheatProtoTwinClock.apsimx";
-            string simFile = "../../RVIII_2022/model/WheatProto.apsimx";
+            //string simFile = "../../RVIII_2022/model/WheatProto.apsimx";
+            string simFile = "../../grassmodels/models/AGPRyeGrassDates.apsimx";
             IModel sims = FileFormat.ReadFromFile<Simulations>(simFile, e => throw e, false).NewModel;
 
             var weather = sims.FindDescendant<Weather>();
-            weather.FileName = "Jokioinen.met";
+            //weather.FileName = "Jokioinen.met";
+
 
             //var ops = sim.FindDescendant<Models.Operations>();
             //var op = ops.Operation.First();
@@ -56,16 +60,18 @@ namespace ClockConsole
             sn.Done(); */
 
 
-            ModelEnsemble en = new ModelEnsemble(sims, 4, 1);
+            ModelEnsemble en = new ModelEnsemble(sims, 4, 4);
             en.Prepare();
             en.Commence();
-            var wht = en.Models[0].FindDescendant<Plant>();
+
+            //var wht = en.Models[0].FindDescendant<Plant>();
+            var agp = en.Models[0].FindDescendant<PastureSpecies>();
 
             while (en.Today <= en.EndDate)
             {
                 en.Step();
-                Console.WriteLine(en.Today.Date.ToShortDateString() + "," +
-                    wht.LAI.ToString()
+                Console.WriteLine(en.Today.Date.ToShortDateString() + "," + agp.AboveGroundHarvestable.Wt.ToString()
+                    //wht.LAI.ToString()
                     );
             }
             en.Done();
