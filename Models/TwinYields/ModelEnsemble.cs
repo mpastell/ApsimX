@@ -10,6 +10,9 @@ using Models.Core;
 using Models.PMF.Organs;
 using Models.PostSimulationTools;
 using Models.Storage;
+using Models.Soils.NutrientPatching;
+using Models.PMF;
+using Models.Utilities;
 
 namespace Models.TwinYields
 {
@@ -44,6 +47,7 @@ namespace Models.TwinYields
 
         private CancellationTokenSource cts;
         private ParallelOptions parallelOptions;
+        private Model model;
 
         /// <summary>Initialize the model ensemble</summary>
         public ModelEnsemble(IModel imodel, Int64 N, int Ncores = -1)
@@ -54,21 +58,8 @@ namespace Models.TwinYields
             parallelOptions.MaxDegreeOfParallelism = Ncores;
             this.N = N;
 
-            Model model = (Model)imodel;
-            var storage = model.FindChild<DataStore>();
-            storage.Enabled = false;
-            var reports = model.FindAllDescendants<Report>();
-
-            foreach (var report in reports)
-            {
-                model.Children.Remove(report);
-            }
-
-            var summaries = model.FindAllDescendants<Summary>();
-            foreach (var summary in summaries)
-            {
-                summary.Verbosity = MessageType.Error;
-            }
+            model = (Model)imodel;
+            Ensemblify(model);
 
             ConcurrentBag<Model> ModelBag = new ConcurrentBag<Model>();
 
@@ -81,6 +72,40 @@ namespace Models.TwinYields
             Models = ModelBag.ToList();
             Simulations = Models.Select(m => m.FindDescendant<Simulation>()).ToList();
             Clocks = Simulations.Select(s => s.FindDescendant<TwinClock>()).ToList();
+        }
+
+        //Remove extra models and replace Clock with TwinClock
+        private void Ensemblify(Model model)
+        {
+            var storage = model.FindChild<DataStore>();
+            storage.Enabled = false;
+
+            //Remove report objects
+            var reports = model.FindAllDescendants<Report>().ToList();
+            reports.ForEach(r => r.Parent.Children.Remove(r));
+
+            //Reduce summary verbosity
+            var summaries = model.FindAllDescendants<Summary>().ToList();
+            summaries.ForEach(summary => summary.Verbosity = MessageType.Error);
+
+            //Replace clocks with TwinClocks
+            var clock = model.FindDescendant<Clock>();
+            if (clock != null)
+            {
+                TwinClock twinClock = new TwinClock();
+                twinClock.StartDate = clock.StartDate;
+                twinClock.EndDate = clock.EndDate;
+                var cp = clock.Parent;
+                cp.Children.Remove(clock);
+                cp.Children.Add(twinClock);
+
+                //Fix reference in manager scripts
+                var managers = model.FindAllDescendants<Manager>();
+                foreach (var manager in managers)
+                {
+                    manager.Code = manager.Code.Replace("Clock", "IClock");
+                }
+            }
         }
 
         /// <summary>Prepare simulations</summary>

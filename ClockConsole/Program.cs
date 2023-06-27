@@ -21,7 +21,8 @@ namespace ClockConsole
             //string simFile = "TwinClock_test.apsimx";
             //string simFile = "AGPRyeGrassDates.apsimx";
             //string simFile = "WheatIClock.apsimx";
-            string simFile = "WheatProtoTwinClock.apsimx";
+            //string simFile = "WheatProtoTwinClock.apsimx";
+            string simFile = "../../RVIII_2022/model/WheatProto.apsimx";
             IModel sims = FileFormat.ReadFromFile<Simulations>(simFile, e => throw e, false).NewModel;
 
             var weather = sims.FindDescendant<Weather>();
@@ -55,7 +56,7 @@ namespace ClockConsole
             sn.Done(); */
 
 
-            ModelEnsemble en = new ModelEnsemble(sims, 100, 1);
+            ModelEnsemble en = new ModelEnsemble(sims, 4, 1);
             en.Prepare();
             en.Commence();
             var wht = en.Models[0].FindDescendant<Plant>();
