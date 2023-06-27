@@ -22,6 +22,10 @@ namespace Models.TwinYields
         public List<TwinClock> Clocks { get; }
         /// <summary>List of simulations</summary>
         public List<Simulation> Simulations { get; }
+
+        /// <summary>Ensemble size</summary>
+        public Int64 N { get;}
+
         /// <summary>Maximum number of cores to use</summary>
         public int NCores { get => parallelOptions.MaxDegreeOfParallelism;
                             set => parallelOptions.MaxDegreeOfParallelism = value;
@@ -48,6 +52,7 @@ namespace Models.TwinYields
                 Ncores = Environment.ProcessorCount;
             parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = Ncores;
+            this.N = N;
 
             Model model = (Model)imodel;
             var storage = model.FindChild<DataStore>();
