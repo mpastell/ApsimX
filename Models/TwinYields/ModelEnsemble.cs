@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Models.Climate;
 using Models.Core;
+using Models.PMF.Organs;
+using Models.PostSimulationTools;
 using Models.Storage;
 
 namespace Models.TwinYields
@@ -18,7 +22,12 @@ namespace Models.TwinYields
         public List<TwinClock> Clocks { get; }
         /// <summary>List of simulations</summary>
         public List<Simulation> Simulations { get; }
-        /// <summary>Clock today</summary>
+        /// <summary>Maximum number of cores to use</summary>
+        public int NCores { get => parallelOptions.MaxDegreeOfParallelism;
+                            set => parallelOptions.MaxDegreeOfParallelism = value;
+        }
+
+        /// <summary>Simulation current date</summary>
         public DateTime Today
         {
             get => Clocks[0].Today;
@@ -30,10 +39,16 @@ namespace Models.TwinYields
         }
 
         private CancellationTokenSource cts;
+        private ParallelOptions parallelOptions;
 
         /// <summary>Initialize the model ensemble</summary>
-        public ModelEnsemble(IModel imodel, Int64 N)
+        public ModelEnsemble(IModel imodel, Int64 N, int Ncores = -1)
         {
+            if (Ncores == -1)
+                Ncores = Environment.ProcessorCount;
+            parallelOptions = new ParallelOptions();
+            parallelOptions.MaxDegreeOfParallelism = Ncores;
+
             Model model = (Model)imodel;
             var storage = model.FindChild<DataStore>();
             storage.Enabled = false;
@@ -44,46 +59,52 @@ namespace Models.TwinYields
                 model.Children.Remove(report);
             }
 
-            Models = new List<Model>();
-            Simulations = new List<Simulation>();
-            Clocks = new List<TwinClock>();
+            var summaries = model.FindAllDescendants<Summary>();
+            foreach (var summary in summaries)
+            {
+                summary.Verbosity = MessageType.Error;
+            }
 
-            for (int i = 0; i < N; i++)
+            ConcurrentBag<Model> ModelBag = new ConcurrentBag<Model>();
+
+            Parallel.For(0, N, parallelOptions, (i, loopState) =>
             {
                 var cmodel = model.Clone();
-                var sim = cmodel.FindDescendant<Simulation>();
-                var clock = sim.FindDescendant<TwinClock>();
-                //sim.FileName = null;
-                Models.Add(cmodel);
-                Simulations.Add(sim);
-                Clocks.Add(clock);
-            }
+                ModelBag.Add(cmodel);
+            });
+
+            Models = ModelBag.ToList();
+            Simulations = Models.Select(m => m.FindDescendant<Simulation>()).ToList();
+            Clocks = Simulations.Select(s => s.FindDescendant<TwinClock>()).ToList();
         }
 
         /// <summary>Prepare simulations</summary>
         public void Prepare()
         {
-            Simulations.ForEach(s => s.Prepare());
+            Parallel.ForEach(Simulations, parallelOptions, s => s.Prepare());
         }
 
         /// <summary>Commence simulations</summary>
         public void Commence()
         {
             cts = new CancellationTokenSource();
-            Clocks.ForEach(c => c.Commence(cts));
+            Parallel.ForEach(Clocks, parallelOptions, c => c.Commence(cts));
         }
 
         /// <summary>Progress by one day</summary>
         public void Step()
         {
-            Clocks.ForEach(c => c.Step());
+            //Clocks.ForEach(c => c.Step());
+            Parallel.ForEach(Clocks, parallelOptions, c => c.Step());
         }
 
         /// <summary>Progress by one day</summary>
         public void Done()
         {
-            Clocks.ForEach(c => c.Done());
-            Simulations.ForEach(sim => sim.Cleanup());
+            Parallel.ForEach(Clocks, parallelOptions, c => c.Done());
+            Parallel.ForEach(Simulations, parallelOptions, sim => sim.Cleanup());
+            //Clocks.ForEach(c => c.Done());
+            //Simulations.ForEach(sim => sim.Cleanup());
             cts.Cancel();
         }
     }

@@ -2,7 +2,7 @@
   "profiles": {
     "ClockConsole": {
       "commandName": "Project",
-      "workingDirectory": "C:\\Users\\03080535\\simulations"
+      "workingDirectory": "%HOME%/git/apsim-notebooks/data-assimilation/models"
     }
   }
 }

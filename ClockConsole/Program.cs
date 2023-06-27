@@ -3,14 +3,13 @@ using Models.Core;
 using Models.Climate;
 using Models.Core.Run;
 using APSIM.Shared.JobRunning;
-using DocumentFormat.OpenXml.Validation;
 using Models;
 using Models.Storage;
 using Models.PMF;
-using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.VisualBasic;
 using Models.TwinYields;
+using System;
 
 namespace ClockConsole
 {
@@ -40,7 +39,7 @@ namespace ClockConsole
             //var jobRunner = new JobRunner(numProcessors: 1);
             //jobRunner.Add(job);
             //jobRunner.Run(true);
-
+/*
             SimulationEnsemble sn = new SimulationEnsemble(sims, 10);
             sn.Prepare();
             sn.Commence();
@@ -53,13 +52,13 @@ namespace ClockConsole
                     wht.LAI.ToString()
                     );
             }
-            sn.Done();
+            sn.Done(); */
 
-            //
-            ModelEnsemble en = new ModelEnsemble(sims, 10); ;
+
+            ModelEnsemble en = new ModelEnsemble(sims, 100, 1);
             en.Prepare();
             en.Commence();
-            wht = en.Models[0].FindDescendant<Plant>();
+            var wht = en.Models[0].FindDescendant<Plant>();
 
             while (en.Today <= en.EndDate)
             {
