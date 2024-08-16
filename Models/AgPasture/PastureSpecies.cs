@@ -30,7 +30,7 @@ namespace Models.AgPasture
 
         /// <summary>Link to APSIM's Clock (provides time information).</summary>
         [Link]
-        private Clock myClock = null;
+        private IClock myClock = null;
 
         /// <summary>Link to the zone this pasture species resides in.</summary>
         [Link]

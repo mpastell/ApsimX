@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ClockConsole": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\mpast"
+    }
+  }
+}
